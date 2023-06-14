@@ -1,0 +1,73 @@
+version: '3'
+services:
+  php:
+    platform: linux/arm64/v8
+    container_name: dofi-php
+    build:
+      context: .docker
+      dockerfile: Dockerfile.dev
+      args:
+        USER_NAME: ${DOCKER_USER_NAME}
+        USER_ID: ${DOCKER_USER_ID}
+    user: ${DOCKER_USER_NAME}
+    volumes:
+      - .:/var/www/dofi
+      - .docker/php/php-fpm.d/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
+      - .docker/php/php-fpm.d/dofi.conf:/usr/local/etc/php-fpm.d/dofi.conf:ro
+      - .docker/php/php.d/php.ini:/usr/local/etc/php/conf.d/php.ini:ro
+      - .docker/php/php.d/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:ro
+    extra_hosts:
+      - host.docker.internal:${DOCKER_HOST_IP}
+    depends_on:
+      - redis
+      - db
+    environment:
+      - PHP_IDE_CONFIG=serverName=dofi.docker
+    networks:
+      - bridge
+
+  http:
+    platform: linux/arm64/v8
+    image: nginx
+    container_name: dofi-nginx
+    ports:
+      - 80:80
+    volumes:
+      - .:/var/www/dofi
+      - .docker/nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf:ro
+    depends_on:
+      - php
+    networks:
+      - bridge
+
+  redis:
+    platform: linux/arm64/v8
+    image: redis
+    container_name: dofi-redis
+    ports:
+      - 6379:6379
+    networks:
+      - bridge
+
+  db:
+    platform: linux/arm64/v8
+    image: mysql:8
+    container_name: dofi-db
+    ports:
+      - ${SQL_PORT}:3306
+    volumes:
+      - dofi-db-volume:/var/lib/mysql
+      - .docker/mysql/mysqld.cnf:/etc/my.cnf.d/mysqld.cnf
+      #- .docker/mysql/initdb.sql.gz:/docker-entrypoint-initdb.d/initdb.sql.gz
+    environment:
+      MYSQL_DATABASE: ${SQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${SQL_PASSWORD}
+    networks:
+      - bridge
+
+networks:
+  bridge:
+
+volumes:
+  dofi-db-volume:
+    external: true

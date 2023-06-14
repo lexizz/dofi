@@ -1,0 +1,37 @@
+[mysqld]
+
+sql_mode="ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
+
+skip-log-bin
+
+max_connections = 100
+
+join_buffer_size = 2M
+sort_buffer_size = 2M
+read_rnd_buffer_size = 2M
+innodb_sort_buffer_size = 2M
+
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links = 0
+
+pid-file=/var/run/mysqld/mysqld.pid
+
+innodb_file_per_table = 1
+innodb_buffer_pool_size = 512M
+innodb_flush_log_at_trx_commit = 0
+innodb_flush_method = O_DSYNC
+innodb_log_file_size = 32M
+query_cache_size = 0
+
+expire_logs_days = 1
+max_binlog_size = 100M
+
+init_connect="SET collation_connection = utf8_general_ci"
+character-set-server = utf8
+collation-server = utf8_general_ci
+
+[client]
+default_character_set = utf8

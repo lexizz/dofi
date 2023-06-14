@@ -1,0 +1,25 @@
+FROM php:8.1-fpm AS php
+
+ARG USER_ID=1000
+ARG USER_NAME=dofi-user
+
+# Install PHP extensions
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    libzip-dev \
+    zip \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && docker-php-ext-install pdo_mysql zip opcache
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN adduser --gecos "" --quiet --disabled-password --uid ${USER_ID} ${USER_NAME}
+
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+WORKDIR /var/www/dofi
+
+CMD ["php-fpm", "-F", "-R"]
